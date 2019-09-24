@@ -13,9 +13,11 @@ const mimeTypes = {
 const blacklist = [
     'http://ocsp.digicert.com/',
     'http://clients1.google.com/ocsp',
+    'http://www.ekoparty.org',
 ];
 
-let virtualDate = '2000';
+
+let virtualDate = '0000';
 
 http.createServer(function (request, response) {
     // TODO: Implement a whitelist to pass on to normal internets
@@ -52,11 +54,19 @@ const wayBack = (requestUrl, response) => {
     // TODO: cache dates for recent urls
     const ext = requestUrl.pathname.split('.').pop();
     const contentType = mimeTypes[ext] || 'text/html';
+
+   if (requestUrl.hostname === 'ekoparty.org') {
+        virtualDate = "20100726213805";
+   } else {
+        virtualDate = "0000";
+    }
+
     const waybackUrl = `http://web.archive.org/web/${virtualDate}id_/${requestUrl.href}`;
 
     const proxyServe = (proxyUrl) => {
         const req = http.get(proxyUrl, (res) => {
             const { statusCode } = res;
+console.log(`requestUrl: ${proxyUrl}`, 'utf8');
             if (statusCode === 302 ) {
                 proxyServe(url.parse(res.headers['location']));
             } else {
